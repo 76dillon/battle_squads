@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Battle Squads</title>
+</head>
+<body>
+  <h1>Battle Squads</h1>
+
+  <h2>Login</h2>
+  <label>
+    Username:
+    <input id="login-username" type="text" />
+  </label>
+  <br />
+  <label>
+    Password:
+    <input id="login-password" type="password" />
+  </label>
+  <br />
+  <button id="login-button">Login</button>
+  <p>Current player: <span id="current-player"></span></p>
+
+  <div id="match-info"></div>
+
+  <h2>Sides</h2>
+  <div id="sides"></div>
+
+  <h2>Take a Turn</h2>
+  <!-- 
+  <label>
+    Move ID:
+    <input id="move-id" type="number" value="1" />
+  </label>
+  <br />
+  <button id="play-turn">Play Turn</button>
+  -->
+  <p id="status" style="color: green;"></p>
+  <pre id="error" style="color: red;"></pre>
+
+
+  <h2>Your Matches</h2>
+  <button id="refresh-matches">Refresh Matches</button>
+  <ul id="match-list"></ul>
+
+  <h2>Create Match</h2>
+  <label>
+    Opponent ID:
+    <input id="create-opponent-id" type="number" />
+  </label>
+  <br />
+  <label>
+    Your Squad ID:
+    <input id="create-squad1-id" type="number" value="1" />
+  </label>
+  <br />
+  <label>
+    Opponent Squad ID:
+    <input id="create-squad2-id" type="number" value="2" />
+  </label>
+  <br />
+  <button id="create-match-button">Create Match</button>
+
+  <h2>Available Units</h2>
+  <ul id="unit-list"></ul>
+
+  <h2>Your Squads</h2>
+  <button id="refresh-squads">Refresh Squads</button>
+  <ul id="squad-list"></ul>
+
+  <h2>Create Squad</h2>
+  <label>
+    Squad Name:
+    <input id="squad-name" type="text" />
+  </label>
+  <br />
+  <label>
+    Unit IDs (comma-separated, in order):
+    <input id="squad-unit-ids" type="text" placeholder="e.g. 1,2,3" />
+  </label>
+  <br />
+  <button id="create-squad-button">Create Squad</button>
+  <h2>Battle Log</h2>
+  <ul id="battle-log"></ul>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+INSERT INTO unit_types (name) VALUES ('Fire'), ('Water'), ('Grass');
+
+INSERT INTO units (name, type_id, base_hp, base_attack, base_speed)
+VALUES
+  ('Flame Wolf', 1, 40, 12, 10),
+  ('Aqua Drake', 2, 35, 10, 9),
+  ('Leaf Sprite', 3, 30, 8,  15);
+
+INSERT INTO moves (name, power, accuracy, type_id)
+VALUES
+  ('Fireball', 20, 95, 1),
+  ('Water Jet', 18, 100, 2),
+  ('Leaf Blade', 22, 90, 3),
+  ('Tackle', 10, 100, 1);
+
+INSERT INTO unit_moves (unit_id, move_id)
+VALUES
+  (1, 1), (1, 4),   -- Flame Wolf: Fireball, Tackle
+  (2, 2), (2, 4),   -- Aqua Drake: Water Jet, Tackle
+  (3, 3), (3, 4);   -- Leaf Sprite: Leaf Blade, Tackle

@@ -1,0 +1,9 @@
+version: "2"
+sql:
+  - schema: "sql/schema"        # or wherever goose migrations live
+    queries: "sql/queries"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "store"
+        out: "internal/store"
