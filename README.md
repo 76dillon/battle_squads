@@ -1,4 +1,4 @@
-# battle_squads
+# Battle Squads
 
 #Access postgres
 psql postgres
