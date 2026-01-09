@@ -9,6 +9,55 @@ import (
 	"context"
 )
 
+const createMove = `-- name: CreateMove :one
+INSERT INTO moves (name, power, accuracy, type_id)
+VALUES ($1, $2, $3, $4)
+RETURNING id, name, power, accuracy, type_id
+`
+
+type CreateMoveParams struct {
+	Name     string
+	Power    int32
+	Accuracy int32
+	TypeID   int64
+}
+
+func (q *Queries) CreateMove(ctx context.Context, arg CreateMoveParams) (Move, error) {
+	row := q.db.QueryRowContext(ctx, createMove,
+		arg.Name,
+		arg.Power,
+		arg.Accuracy,
+		arg.TypeID,
+	)
+	var i Move
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Power,
+		&i.Accuracy,
+		&i.TypeID,
+	)
+	return i, err
+}
+
+const createUnitMove = `-- name: CreateUnitMove :one
+INSERT INTO unit_moves (unit_id, move_id)
+VALUES ($1, $2)
+RETURNING unit_id, move_id
+`
+
+type CreateUnitMoveParams struct {
+	UnitID int64
+	MoveID int64
+}
+
+func (q *Queries) CreateUnitMove(ctx context.Context, arg CreateUnitMoveParams) (UnitMove, error) {
+	row := q.db.QueryRowContext(ctx, createUnitMove, arg.UnitID, arg.MoveID)
+	var i UnitMove
+	err := row.Scan(&i.UnitID, &i.MoveID)
+	return i, err
+}
+
 const listMovesForUnit = `-- name: ListMovesForUnit :many
 SELECT
   m.id, m.name, m.power, m.accuracy, m.type_id

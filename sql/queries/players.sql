@@ -7,3 +7,8 @@ RETURNING id, username, password_hash, created_at;
 SELECT id, username, password_hash, created_at
 FROM players
 WHERE username = $1;
+
+-- name: GetPlayerByID :one
+SELECT id, username, password_hash, created_at, is_admin
+FROM players
+WHERE id = $1;

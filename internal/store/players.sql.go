@@ -7,6 +7,7 @@ package store
 
 import (
 	"context"
+	"time"
 )
 
 const createPlayer = `-- name: CreatePlayer :one
@@ -20,14 +21,40 @@ type CreatePlayerParams struct {
 	PasswordHash string
 }
 
-func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) (Player, error) {
+type CreatePlayerRow struct {
+	ID           int64
+	Username     string
+	PasswordHash string
+	CreatedAt    time.Time
+}
+
+func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) (CreatePlayerRow, error) {
 	row := q.db.QueryRowContext(ctx, createPlayer, arg.Username, arg.PasswordHash)
+	var i CreatePlayerRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.PasswordHash,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getPlayerByID = `-- name: GetPlayerByID :one
+SELECT id, username, password_hash, created_at, is_admin
+FROM players
+WHERE id = $1
+`
+
+func (q *Queries) GetPlayerByID(ctx context.Context, id int64) (Player, error) {
+	row := q.db.QueryRowContext(ctx, getPlayerByID, id)
 	var i Player
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
 		&i.CreatedAt,
+		&i.IsAdmin,
 	)
 	return i, err
 }
@@ -38,9 +65,16 @@ FROM players
 WHERE username = $1
 `
 
-func (q *Queries) GetPlayerByUsername(ctx context.Context, username string) (Player, error) {
+type GetPlayerByUsernameRow struct {
+	ID           int64
+	Username     string
+	PasswordHash string
+	CreatedAt    time.Time
+}
+
+func (q *Queries) GetPlayerByUsername(ctx context.Context, username string) (GetPlayerByUsernameRow, error) {
 	row := q.db.QueryRowContext(ctx, getPlayerByUsername, username)
-	var i Player
+	var i GetPlayerByUsernameRow
 	err := row.Scan(
 		&i.ID,
 		&i.Username,

@@ -166,6 +166,18 @@ async function init() {
     .addEventListener("click", login);
 
   document
+    .getElementById("signup-button")
+    .addEventListener("click", signup);
+
+  document
+    .getElementById("admin-create-unit-button")
+    .addEventListener("click", adminCreateUnit);
+
+  document
+    .getElementById("admin-create-move-button")
+    .addEventListener("click", adminCreateMove);
+
+  document
     .getElementById("refresh-matches")
     .addEventListener("click", async () => {
       try {
@@ -239,7 +251,7 @@ async function login() {
     currentPlayerId = Number(data.player_id);
     document.getElementById("current-player").textContent =
       `${data.username} (id=${currentPlayerId})`;
-
+    updateDevPanelVisibility();
     if (statusEl) statusEl.textContent = `Logged in as ${data.username}`;
   } catch (err) {
     errorEl.textContent = `Network error: ${err.message}`;
@@ -518,6 +530,202 @@ function startAutoRefresh() {
       console.log("auto-refresh error:", err.message);
     }
   }, 5000);
+}
+
+async function signup() {
+  const userEl = document.getElementById("signup-username");
+  const passEl = document.getElementById("signup-password");
+  const errorEl = document.getElementById("error");
+  const statusEl = document.getElementById("status");
+
+  errorEl.textContent = "";
+  if (statusEl) statusEl.textContent = "";
+
+  const username = userEl.value.trim();
+  const password = passEl.value;
+
+  if (!username || !password) {
+    errorEl.textContent = "Signup username and password are required.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      errorEl.textContent = `Signup failed: ${res.status} ${text}`;
+      return;
+    }
+
+    const data = await res.json();
+    currentPlayerId = Number(data.player_id);
+    document.getElementById("current-player").textContent =
+      `${data.username} (id=${currentPlayerId})`;
+
+    if (statusEl) statusEl.textContent = `Signed up and logged in as ${data.username}`;
+
+    // Load matches/squads for this new user
+    const matches = await fetchMyMatches().catch(() => []);
+    if (matches.length) renderMatchList(matches);
+
+    const squads = await fetchMySquads().catch(() => []);
+    if (squads.length) renderSquadList(squads);
+  } catch (err) {
+    errorEl.textContent = `Network error: ${err.message}`;
+  }
+}
+
+async function adminCreateUnit() {
+  const errorEl = document.getElementById("error");
+  const statusEl = document.getElementById("status");
+  errorEl.textContent = "";
+  if (statusEl) statusEl.textContent = "";
+
+  if (!currentPlayerId) {
+    errorEl.textContent = "You must log in first.";
+    return;
+  }
+
+  const nameEl = document.getElementById("admin-unit-name");
+  const typeIdEl = document.getElementById("admin-unit-type-id");
+  const hpEl = document.getElementById("admin-unit-base-hp");
+  const atkEl = document.getElementById("admin-unit-base-attack");
+  const spdEl = document.getElementById("admin-unit-base-speed");
+
+  const name = nameEl.value.trim();
+  const typeId = Number(typeIdEl.value);
+  const baseHp = Number(hpEl.value);
+  const baseAttack = Number(atkEl.value);
+  const baseSpeed = Number(spdEl.value);
+
+  if (!name || !typeId || !baseHp || !baseAttack || !baseSpeed) {
+    errorEl.textContent = "All unit fields are required.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/units`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Player-ID": String(currentPlayerId), // must be admin on backend
+      },
+      body: JSON.stringify({
+        name: name,
+        type_id: typeId,
+        base_hp: baseHp,
+        base_attack: baseAttack,
+        base_speed: baseSpeed,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      errorEl.textContent = `Create unit failed: ${res.status} ${text}`;
+      return;
+    }
+
+    const unit = await res.json();
+    if (statusEl) statusEl.textContent = `Created unit ID=${unit.id} (${unit.name})`;
+
+    // Refresh unit list so new unit shows up
+    const units = await fetchUnits();
+    renderUnits(units);
+  } catch (err) {
+    errorEl.textContent = `Network error: ${err.message}`;
+  }
+}
+
+async function adminCreateMove() {
+  const errorEl = document.getElementById("error");
+  const statusEl = document.getElementById("status");
+  errorEl.textContent = "";
+  if (statusEl) statusEl.textContent = "";
+
+  if (!currentPlayerId) {
+    errorEl.textContent = "You must log in first.";
+    return;
+  }
+
+  const nameEl = document.getElementById("admin-move-name");
+  const powerEl = document.getElementById("admin-move-power");
+  const accEl = document.getElementById("admin-move-accuracy");
+  const typeIdEl = document.getElementById("admin-move-type-id");
+  const unitIdsEl = document.getElementById("admin-move-unit-ids");
+
+  const name = nameEl.value.trim();
+  const power = Number(powerEl.value);
+  const accuracy = Number(accEl.value);
+  const typeId = Number(typeIdEl.value);
+  const unitsRaw = unitIdsEl.value.trim();
+
+  if (!name || !power || !accuracy || !typeId || !unitsRaw) {
+    errorEl.textContent = "All move fields and unit IDs are required.";
+    return;
+  }
+
+  const unitIds = unitsRaw
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((s) => Number(s))
+    .filter((n) => !Number.isNaN(n));
+
+  if (unitIds.length === 0) {
+    errorEl.textContent = "Please provide at least one valid unit ID.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/moves`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Player-ID": String(currentPlayerId),
+      },
+      body: JSON.stringify({
+        name: name,
+        power: power,
+        accuracy: accuracy,
+        type_id: typeId,
+        unit_ids: unitIds,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      errorEl.textContent = `Create move failed: ${res.status} ${text}`;
+      return;
+    }
+
+    const move = await res.json();
+    if (statusEl) statusEl.textContent =
+      `Created move ID=${move.id} (${move.name}) and assigned to units ${unitIds.join(", ")}`;
+
+    // No need to reload units; moves are fetched per-unit via ListMovesForUnit when rendering match
+  } catch (err) {
+    errorEl.textContent = `Network error: ${err.message}`;
+  }
+}
+
+function isCurrentUserAdmin() {
+  // TEMP: treat player ID 1 as admin in the UI
+  return currentPlayerId === 1;
+}
+
+function updateDevPanelVisibility() {
+  const devPanel = document.getElementById("dev-panel");
+  if (!devPanel) return;
+  if (isCurrentUserAdmin()) {
+    devPanel.style.display = "block";
+  } else {
+    devPanel.style.display = "none";
+  }
 }
 
 init();

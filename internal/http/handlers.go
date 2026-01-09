@@ -37,9 +37,12 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/login", s.handleLogin)
 	s.mux.HandleFunc("/units", s.handleListUnits)
 	s.mux.HandleFunc("/me/squads", s.handleSquads)
+	s.mux.HandleFunc("/signup", s.handleSignup)
 	s.mux.HandleFunc("/matches/", s.handleMatch)
 	s.mux.HandleFunc("/me/matches", s.handleListMyMatches)
 	s.mux.HandleFunc("/matches", s.handleCreateMatch) // for POST /matches
+	s.mux.HandleFunc("/admin/units", s.handleCreateUnit)
+	s.mux.HandleFunc("/admin/moves", s.handleCreateMove)
 	// we'll add /matches/{id} soon
 }
 
@@ -531,4 +534,121 @@ func (s *Server) handleCreateSquad(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+type createUnitRequest struct {
+	Name       string `json:"name"`
+	TypeID     int64  `json:"type_id"`
+	BaseHP     int32  `json:"base_hp"`
+	BaseAttack int32  `json:"base_attack"`
+	BaseSpeed  int32  `json:"base_speed"`
+}
+
+func (s *Server) handleCreateUnit(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	playerIDStr := r.Header.Get("X-Player-ID")
+	if playerIDStr == "" {
+		http.Error(w, "missing X-Player-ID", http.StatusBadRequest)
+		return
+	}
+	playerID, err := strconv.ParseInt(playerIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid X-Player-ID", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	if _, err := s.requireAdmin(ctx, playerID); err != nil {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	var req createUnitRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	u, err := s.q.CreateUnit(ctx, store.CreateUnitParams{
+		Name:       req.Name,
+		TypeID:     req.TypeID,
+		BaseHp:     req.BaseHP,
+		BaseAttack: req.BaseAttack,
+		BaseSpeed:  req.BaseSpeed,
+	})
+	if err != nil {
+		http.Error(w, "could not create unit", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(u)
+}
+
+type createMoveRequest struct {
+	Name     string  `json:"name"`
+	Power    int32   `json:"power"`
+	Accuracy int32   `json:"accuracy"`
+	TypeID   int64   `json:"type_id"`
+	UnitIDs  []int64 `json:"unit_ids"`
+}
+
+func (s *Server) handleCreateMove(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	playerIDStr := r.Header.Get("X-Player-ID")
+	if playerIDStr == "" {
+		http.Error(w, "missing X-Player-ID", http.StatusBadRequest)
+		return
+	}
+	playerID, err := strconv.ParseInt(playerIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid X-Player-ID", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	if _, err := s.requireAdmin(ctx, playerID); err != nil {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	var req createMoveRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	mv, err := s.q.CreateMove(ctx, store.CreateMoveParams{
+		Name:     req.Name,
+		Power:    req.Power,
+		Accuracy: req.Accuracy,
+		TypeID:   req.TypeID,
+	})
+	if err != nil {
+		http.Error(w, "could not create move", http.StatusBadRequest)
+		return
+	}
+
+	// assign move to units
+	for _, unitID := range req.UnitIDs {
+		_, err := s.q.CreateUnitMove(ctx, store.CreateUnitMoveParams{
+			UnitID: unitID,
+			MoveID: mv.ID,
+		})
+		if err != nil {
+			http.Error(w, "could not assign move to units", http.StatusBadRequest)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(mv)
 }

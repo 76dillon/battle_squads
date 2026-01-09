@@ -9,6 +9,40 @@ import (
 	"context"
 )
 
+const createUnit = `-- name: CreateUnit :one
+INSERT INTO units (name, type_id, base_hp, base_attack, base_speed)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, name, type_id, base_hp, base_attack, base_speed
+`
+
+type CreateUnitParams struct {
+	Name       string
+	TypeID     int64
+	BaseHp     int32
+	BaseAttack int32
+	BaseSpeed  int32
+}
+
+func (q *Queries) CreateUnit(ctx context.Context, arg CreateUnitParams) (Unit, error) {
+	row := q.db.QueryRowContext(ctx, createUnit,
+		arg.Name,
+		arg.TypeID,
+		arg.BaseHp,
+		arg.BaseAttack,
+		arg.BaseSpeed,
+	)
+	var i Unit
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.TypeID,
+		&i.BaseHp,
+		&i.BaseAttack,
+		&i.BaseSpeed,
+	)
+	return i, err
+}
+
 const getUnitByID = `-- name: GetUnitByID :one
 SELECT
   id, name, type_id, base_hp, base_attack, base_speed

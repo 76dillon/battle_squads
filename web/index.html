@@ -19,6 +19,19 @@
   </label>
   <br />
   <button id="login-button">Login</button>
+  <h2>Sign Up</h2>
+  <label>
+    New Username:
+    <input id="signup-username" type="text" />
+  </label>
+  <br />
+  <label>
+    New Password:
+    <input id="signup-password" type="password" />
+  </label>
+  <br />
+  <button id="signup-button">Sign Up</button>
+
   <p>Current player: <span id="current-player"></span></p>
 
   <div id="match-info"></div>
@@ -82,6 +95,65 @@
   <button id="create-squad-button">Create Squad</button>
   <h2>Battle Log</h2>
   <ul id="battle-log"></ul>
+  <h2>Dev Panel (Admin Only)</h2>
+
+  <div id="dev-panel" style="display: none;">
+  <h3>Create Unit</h3>
+  <label>
+    Name:
+    <input id="admin-unit-name" type="text" />
+  </label>
+  <br />
+  <label>
+    Type ID:
+    <input id="admin-unit-type-id" type="number" />
+  </label>
+  <br />
+  <label>
+    Base HP:
+    <input id="admin-unit-base-hp" type="number" />
+  </label>
+  <br />
+  <label>
+    Base Attack:
+    <input id="admin-unit-base-attack" type="number" />
+  </label>
+  <br />
+  <label>
+    Base Speed:
+    <input id="admin-unit-base-speed" type="number" />
+  </label>
+  <br />
+  <button id="admin-create-unit-button">Create Unit</button>
+
+  <h3>Create Move</h3>
+  <label>
+    Name:
+    <input id="admin-move-name" type="text" />
+  </label>
+  <br />
+  <label>
+    Power:
+    <input id="admin-move-power" type="number" />
+  </label>
+  <br />
+  <label>
+    Accuracy:
+    <input id="admin-move-accuracy" type="number" />
+  </label>
+  <br />
+  <label>
+    Type ID:
+    <input id="admin-move-type-id" type="number" />
+  </label>
+  <br />
+  <label>
+    Unit IDs to learn this move (comma-separated):
+    <input id="admin-move-unit-ids" type="text" placeholder="e.g. 1,4,5" />
+  </label>
+  <br />
+  <button id="admin-create-move-button">Create Move</button>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>

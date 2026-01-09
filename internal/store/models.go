@@ -65,6 +65,7 @@ type Player struct {
 	Username     string
 	PasswordHash string
 	CreatedAt    time.Time
+	IsAdmin      bool
 }
 
 type Squad struct {
