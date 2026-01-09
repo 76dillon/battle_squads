@@ -28,3 +28,83 @@ export HTTP_PORT="8080"
 6. Run the server at the root of the working directory: ```go run ./cmd/server```
 7. Run the web client in the web directory ```python3 -m http.server 8000```
 8. Open a browser and navigate to ```http://localhost:8000```
+
+## Usage
+Battle Squads contains a rich API. The endpoints are documented as follows:
+
+### ```POST /siqnup```
+Request JSON:
+```
+{
+  "username": "alice",
+  "password": "secret123"
+}
+```
+Response 200:
+```
+{
+  "player_id": 1,
+  "username": "alice"
+}
+```
+Notes: 
+- Dev-only: password is stored as plain text or a simple hash depending on your implementation.
+- On error (duplicate username, bad request): 4xx with plain text message.
+
+### ```POST /login```
+Request JSON:
+```
+{
+  "username": "alice",
+  "password": "secret123"
+}
+```
+Response 200:
+```
+{
+  "player_id": 1,
+  "username": "alice"
+}
+```
+Notes:
+- Client passes player_id back in the X-Player-ID header for subsequent requests.
+- On invalid credentials: 401 with "invalid credentials".
+
+### Health ```GET /health```
+Response 200:
+```
+{ "status": "ok" }
+```
+
+### ```GET /units```
+
+### ```GET /me/squads```
+
+### ```POST /me/swuads/```
+
+### ```GET /me/matches```
+
+### ```POST /matches```
+
+### ```GET /matches{id}```
+
+### ```POST /matches/{id}/turns```
+
+### Admin (Dev Endpoints)
+
+These endpoints require the X-Player_ID <admin_player_id>, where the player has is_admin = TRUE in players
+
+### ```POST /admin/units```
+
+### ```POST /admin/moves```
+
+
+
+
+
+
+
+
+## Contributing
+
+If you'd like to contribute, please fork the repository and open a pull request to the main branch.
